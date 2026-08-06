@@ -1,4 +1,4 @@
-# MtbGC-DataViz-V1
+# mtb-geneconv-dataviz
 
 A static, GitHub-Pages-hostable hub site linking to several interactive visualizations
 of the data and results from the paper *Gene conversion is a key driver of diversity
@@ -10,7 +10,7 @@ hotspots in M. tuberculosis antigens and virulence-associated loci*
 ## What's here
 
 ```
-MtbGC-DataViz-V1/
+mtb-geneconv-dataviz/
   index.html                  # landing page: intro + table of contents
   NucDivHotspots_Viewer/      # per-sample igv-reports viewer, 37 NucDiv hotspot windows
   MtbParalogRegions_Viewer/   # per-sample igv-reports viewer, ~200 paralogous regions
