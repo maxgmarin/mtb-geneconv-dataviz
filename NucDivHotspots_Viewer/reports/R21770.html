@@ -1,0 +1,329 @@
+<html>
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>IGV Variant Inspector </title>
+
+    <!-- igv -->
+
+    <script src="https://cdn.jsdelivr.net/npm/igv@3.5.2/dist/igv.min.js"></script>
+
+
+    <style type="text/css">
+        body {
+            font-size: 80%;
+            font-family: 'Lucida Grande', Verdana, Arial, Sans-Serif;
+        }
+
+
+    </style>
+
+    <!-- selector table style -->
+    <style>
+
+        thead {
+            position: sticky;
+            top: 0;
+        }
+
+        tr {
+            cursor: default;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: lightblue;
+        }
+
+        th {
+            background-color: lightskyblue;
+            color: white;
+            cursor: pointer;
+        }
+
+        .selected {
+            background-color: lightblue !important;
+            outline: solid thin darkblue !important;
+        }
+    </style>
+
+    <!-- accordian style,  ref: https://alligator.io/css/collapsible/ -->
+    <style type="text/css">
+        .wrap-collabsible {
+            margin-bottom: 1.2rem;
+        }
+
+        input[type='checkbox'] {
+            display: none;
+        }
+
+        .lbl-toggle {
+            display: block;
+
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            text-align: left;
+
+            padding: 1rem;
+
+            color: black;
+            background: #dddddd;
+
+            cursor: pointer;
+
+            border-radius: 7px;
+            transition: all 0.25s ease-out;
+        }
+
+        .lbl-toggle:hover {
+            color: blue;
+        }
+
+        .lbl-toggle::before {
+            content: ' ';
+            display: inline-block;
+
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 5px solid currentColor;
+            vertical-align: middle;
+            margin-right: .7rem;
+            transform: translateY(-2px);
+
+            transition: transform .2s ease-out;
+        }
+
+        .toggle:checked + .lbl-toggle::before {
+            transform: rotate(90deg) translateX(-3px);
+        }
+
+        .collapsible-content {
+            max-height: 0px;
+            overflow: auto;
+            transition: max-height .25s ease-in-out;
+        }
+
+        .toggle:checked + .lbl-toggle + .collapsible-content {
+            max-height: 350px;
+        }
+
+        .toggle:checked + .lbl-toggle {
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .collapsible-content .content-inner {
+            background: rgba(250, 224, 66, .2);
+            border-bottom: 1px solid rgba(250, 224, 66, .45);
+            border-bottom-left-radius: 7px;
+            border-bottom-right-radius: 7px;
+            padding: .5rem 1rem;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div id="container" style="display: flex; flex-direction: column">
+    <div id="tableContainer" class="wrap-collabsible">
+        <input id="collapsible" class="toggle" type="checkbox" checked>
+        <label for="collapsible" class="lbl-toggle">Variants</label>
+        <div class="collapsible-content">
+            <div id="tableSelectorDiv"></div>
+        </div>
+    </div>
+</div>
+
+<div id="igvContainer">
+    <div id="igvDiv"></div>
+</div>
+
+
+<script type="text/javascript">
+
+    const tableJson = {"headers": ["unique_id", "Chrom", "Start", "End", "OverlapGenes", "NucDiv_SNPsPerKb", "NucDiv_ModZ"], "rows": [[0, "NC_000962.3", "103000", "104000", "Rv0093c,Rv0094c", "4.05131", "18.81732968188685"], [1, "NC_000962.3", "104000", "105000", "Rv0094c,Rv0095c", "15.960599999999998", "76.88014351232768"], [2, "NC_000962.3", "105000", "106000", "Rv0095c,PPE1", "3.37124", "15.501701478890034"], [3, "NC_000962.3", "338000", "339000", "PE_PGRS4", "5.14383", "24.14382566662089"], [4, "NC_000962.3", "1095000", "1096000", "rpmF,PE_PGRS18", "3.10016", "14.180072097696371"], [5, "NC_000962.3", "1096000", "1097000", "PE_PGRS18,mprA", "4.87615", "22.838772720044528"], [6, "NC_000962.3", "1276000", "1277000", "Rv1148c", "13.222", "63.52831297028486"], [7, "NC_000962.3", "1340000", "1341000", "PPE18,esxK", "2.8402000000000003", "12.912657408545181"], [8, "NC_000962.3", "1341000", "1342000", "esxL,Rv1199c", "2.99955", "13.689555895682595"], [9, "NC_000962.3", "1533000", "1534000", "PPE19,Rv1362c", "2.5001", "11.254526404620266"], [10, "NC_000962.3", "1634000", "1635000", "PE_PGRS27", "9.037730000000002", "43.12823118318432"], [11, "NC_000962.3", "1637000", "1638000", "PE_PGRS28", "6.07394", "28.67850437306194"], [12, "NC_000962.3", "1638000", "1639000", "PE_PGRS28,Rv1453", "3.2590700000000004", "14.954825399177432"], [13, "NC_000962.3", "1788000", "1789000", "Rv1586c,Rv1587c", "2.28045", "10.183639974123038"], [14, "NC_000962.3", "1789000", "1790000", "Rv1587c,Rv1588c", "6.81367", "32.285000249372956"], [15, "NC_000962.3", "2196000", "2197000", "Rv1945", "3.58822", "16.559570532790737"], [16, "NC_000962.3", "2262000", "2263000", "Rv2015c", "2.3049", "10.30284404070923"], [17, "NC_000962.3", "2338000", "2339000", "Rv2081c,Rv2082", "2.55567", "11.525453602174242"], [18, "NC_000962.3", "2339000", "2340000", "Rv2082", "2.40884", "10.809595397804072"], [19, "NC_000962.3", "2626000", "2627000", "esxO,esxP,Rv2348c", "5.814609999999999", "27.414161199736892"], [20, "NC_000962.3", "2867000", "2868000", "lppA,lppB,vapB18", "7.69545", "36.58404981315099"], [21, "NC_000962.3", "2944000", "2945000", "PE_PGRS45", "2.87923", "13.102945127107924"], [22, "NC_000962.3", "3135000", "3136000", "Rv2827c,Rv2828c", "4.962000000000001", "23.257327694131426"], [23, "NC_000962.3", "3730000", "3731000", "PPE54", "3.3572", "15.433250554764468"], [24, "NC_000962.3", "3732000", "3733000", "PPE54", "4.22288", "19.653805825207634"], [25, "NC_000962.3", "3735000", "3736000", "PPE54", "2.55894", "11.541396231938531"], [26, "NC_000962.3", "3746000", "3747000", "PPE55", "3.00907", "13.735969912611042"], [27, "NC_000962.3", "3750000", "3751000", "PPE55", "6.3443700000000005", "29.996964729990534"], [28, "NC_000962.3", "3842000", "3843000", "Rv3424c,PPE57", "7.54143", "35.83313732498717"], [29, "NC_000962.3", "3847000", "3848000", "PPE59,Rv3430c", "3.82621", "17.719872201782472"], [30, "NC_000962.3", "3883000", "3884000", "rmlC,Rv3466,Rv3467", "6.68007", "31.63364387735188"], [31, "NC_000962.3", "3895000", "3896000", "PPE60,Rv3479", "5.05551", "23.713228400326717"], [32, "NC_000962.3", "3932000", "3933000", "PE_PGRS54", "3.94248", "18.28673751147477"], [33, "NC_000962.3", "3934000", "3935000", "PE_PGRS54", "4.92918", "23.097316345854985"], [34, "NC_000962.3", "3943000", "3944000", "PE_PGRS56", "3.09938", "14.176269268578285"], [35, "NC_000962.3", "3947000", "3948000", "PE_PGRS57", "3.92371", "18.195225841543362"], [36, "NC_000962.3", "4254000", "4255000", "Rv3798,accD4", "2.83769", "12.900420099460051"]]}
+    const locusDictionary = {"0": "NC_000962.3:103002-104000", "1": "NC_000962.3:104002-105000", "2": "NC_000962.3:105002-106000", "3": "NC_000962.3:338002-339000", "4": "NC_000962.3:1095002-1096000", "5": "NC_000962.3:1096002-1097000", "6": "NC_000962.3:1276002-1277000", "7": "NC_000962.3:1340002-1341000", "8": "NC_000962.3:1341002-1342000", "9": "NC_000962.3:1533002-1534000", "10": "NC_000962.3:1634002-1635000", "11": "NC_000962.3:1637002-1638000", "12": "NC_000962.3:1638002-1639000", "13": "NC_000962.3:1788002-1789000", "14": "NC_000962.3:1789002-1790000", "15": "NC_000962.3:2196002-2197000", "16": "NC_000962.3:2262002-2263000", "17": "NC_000962.3:2338002-2339000", "18": "NC_000962.3:2339002-2340000", "19": "NC_000962.3:2626002-2627000", "20": "NC_000962.3:2867002-2868000", "21": "NC_000962.3:2944002-2945000", "22": "NC_000962.3:3135002-3136000", "23": "NC_000962.3:3730002-3731000", "24": "NC_000962.3:3732002-3733000", "25": "NC_000962.3:3735002-3736000", "26": "NC_000962.3:3746002-3747000", "27": "NC_000962.3:3750002-3751000", "28": "NC_000962.3:3842002-3843000", "29": "NC_000962.3:3847002-3848000", "30": "NC_000962.3:3883002-3884000", "31": "NC_000962.3:3895002-3896000", "32": "NC_000962.3:3932002-3933000", "33": "NC_000962.3:3934002-3935000", "34": "NC_000962.3:3943002-3944000", "35": "NC_000962.3:3947002-3948000", "36": "NC_000962.3:4254002-4255000"}
+    let sortOption = "BASE"
+    let igvBrowser
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initIGV()
+    })
+
+
+    function initIGV() {
+
+        var igvDiv
+
+        igvDiv = document.getElementById("igvDiv")
+        var options = {"reference": {"fastaURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv/GCF_000195955.2_ASM19595v2_genomic.fasta", "indexURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv/GCF_000195955.2_ASM19595v2_genomic.fasta.fai"}, "tracks": [{"name": "H37Rv Gene Annotation", "type": "annotation", "format": "gff3", "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv/GCF_000195955.2_ASM19595v2_genomic.GenesOnly.gff", "height": 100, "autoHeight": "True", "displayMode": "EXPANDED", "visibilityWindow": 30000}, {"name": "R21770 Assembly Alignment", "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/R21770/R21770.mm2.AsmToH37Rv.asm10.cram", "indexURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/R21770/R21770.mm2.AsmToH37Rv.asm10.cram.crai", "height": 50, "showCoverage": "False", "autoHeight": "True", "format": "cram", "type": "alignment"}, {"name": "R21770 LR Alignments (100X-capped)", "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/R21770/R21770.LR.AlnToH37Rv.Subsample100x.cram", "indexURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/R21770/R21770.LR.AlnToH37Rv.Subsample100x.cram.crai", "height": 300, "showCoverage": "True", "autoHeight": "True", "samplingDepth": 1000, "format": "cram", "type": "alignment"}], "roi": [{"name": "NucDivHotspots.37.1kb", "url": "/n/data1/hms/dbmi/farhat/mm774/Projects/Mtb-GeneConv/NucFlag_Snakemake_TestOutputs_Mtb151/_shared/NucDivHotspots.37.1kb.bed", "type": "roi", "format": "bed"}]}
+
+        igv.createBrowser(igvDiv, options)
+            .then(function (b) {
+                if (sortOption === "BASE") sortOption = "NONE"
+                initTable(b)
+                searchAndSort(b, locusDictionary["0"])
+            })
+    }
+
+    function initTable(igvBrowser) {
+
+        const table = document.createElement("table")
+        table.id = "variant_table"
+        table.style.width = "100%"
+
+        document.getElementById("tableSelectorDiv").appendChild(table)
+
+        const thead = document.createElement('thead')
+        table.appendChild(thead)
+        const headerRow = thead.insertRow(0)
+
+        const headers = tableJson.headers
+        for (let j = 1; j < headers.length; j++) {
+            var cell = document.createElement("th")
+            headerRow.appendChild(cell)
+            cell.innerHTML = headers[j]
+        }
+
+        const tbody = document.createElement('tbody')
+        table.appendChild(tbody)
+        const tableRows = tableJson.rows
+        for (let i = 0; i < tableRows.length; i++) {
+
+            const json = tableRows[i]
+            const unique_id = json[0]
+            const row = document.createElement("tr")
+            row.id = "row_" + unique_id
+            tbody.appendChild(row)
+
+            // First row selected by default
+            if (i === 0) row.classList.add("selected")
+
+            row.onclick = function (event) {
+                const list = document.getElementById("variant_table").getElementsByTagName("tr")
+                for (let i = 0; i < list.length; i++) {
+                    list[i].classList.remove("selected")
+                }
+                const rowID = event.target.parentElement.id
+                const row = document.getElementById(rowID)
+                row.classList.add("selected")
+                const uniqueId = rowID.substring(4)
+                const locus = locusDictionary[uniqueId]
+                searchAndSort(igvBrowser, locus)
+            }
+
+            for (let j = 1; j < headers.length; j++) {
+
+                var value = json[j]
+                cell = document.createElement("td")
+                cell.rowID = i
+                row.appendChild(cell)
+                cell.innerHTML = value
+            }
+        }
+
+        // Add sorting.  Adapted from https://stackoverflow.com/questions/14267781/sorting-html-table-with-javascript/49041392
+        Array.prototype.slice.call(document.querySelectorAll('th')).forEach(function (th) {
+            th.addEventListener('click', function () {
+                //var table = th.parentNode
+                //while (table.tagName.toUpperCase() != 'TABLE') table = table.parentNode;
+                Array.prototype.slice.call(table.querySelectorAll('tr:nth-child(n+1)'), 1)
+                    .sort(comparer(Array.prototype.slice.call(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+                    .forEach(function (tr) {
+                        table.appendChild(tr)
+                    })
+            })
+        })
+
+
+        function getCellValue(tr, idx) {
+            return tr.children[idx].innerText || tr.children[idx].textContent
+        }
+
+        function comparer(idx, asc) {
+            return function (a, b) {
+                return function (v1, v2, asc) {
+                    // Special case for chromosome coloumn
+                    if (idx === 0 && v1.startsWith('chr') && v2.startsWith('chr')) {
+                        v1 = v1.substr(3)
+                        v2 = v2.substr(3)
+                    }
+                    // always put empty columns at end of table when sorting
+                    if (v1 == '' && v2 != '') {
+                        return 1
+                    }
+                    if (v2 == '' && v1 != '') {
+                        return -1
+                    }
+
+                    var isNumber = v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2)
+                    ret = isNumber ? v1 - v2 : v1.toString().localeCompare(v2)
+
+                    // reverse ordering if not ascending order
+                    if (!asc) {
+                        ret = -1 * ret
+                    }
+                    return (ret)
+
+                }(getCellValue(a, idx), getCellValue(b, idx), asc)
+            }
+        }
+
+    }
+
+
+    function searchAndSort(igvBrowser, locus) {
+        igvBrowser.search(locus)
+            .then(function (ignore) {
+                const locusObject = parseLocus(locus)
+                const isSNV = locusObject && locusObject.start === locusObject.end
+                if (sortOption !== "NONE" || isSNV) {
+                    const option = sortOption === "NONE" ? "BASE" : sortOption
+                    const position = Math.floor((locusObject.start + locusObject.end) / 2)
+                    const sortObject = {
+                        chr: locusObject.chr,
+                        position: position,
+                        option: option,
+                        direction: true
+                    }
+                    const alignmentTracks = igvBrowser.findTracks("type", "alignment")
+                    for (let t of alignmentTracks) {
+                        t.sort(sortObject)
+                    }
+                }
+
+            })
+
+    }
+
+    function parseLocus(locus) {
+        const a = locus.split(":")
+        if (a.length === 2) {
+            const b = a[1].split("-")
+            if (b.length === 2) {
+                return {
+                    chr: a[0],
+                    start: Number.parseInt(b[0]) - 1,
+                    end: Number.parseInt(b[1])
+                }
+            }
+        }
+        return undefined
+    }
+
+</script>
+</body>
+</html>

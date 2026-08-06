@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MtbGC-DataViz-V1</title>
+<style>
+  :root {
+    --border: #ddd;
+    --bg-alt: #f7f7f7;
+    --accent: #2c5f8a;
+  }
+  body {
+    font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+    margin: 1.5rem;
+    color: #222;
+    max-width: 900px;
+  }
+  h1 { font-size: 1.4rem; margin-bottom: 0.2rem; }
+  p.subtitle { color: #555; margin-top: 0; }
+  h2 { font-size: 1.1rem; margin: 1.5rem 0 0.6rem 0; }
+  a { color: var(--accent); }
+  ul.toc { list-style: none; margin: 0; padding: 0; }
+  ul.toc li {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+    background: var(--bg-alt);
+  }
+  ul.toc a { font-size: 1.05rem; font-weight: 600; text-decoration: none; }
+  ul.toc a:hover { text-decoration: underline; }
+  ul.toc p { margin: 0.3rem 0 0 0; color: #555; font-size: 0.9rem; }
+  footer { margin-top: 1.5rem; font-size: 0.8rem; color: #888; }
+</style>
+</head>
+<body>
+
+<h1>MtbGC-DataViz-V1</h1>
+<p class="subtitle">
+  This site contains multiple interactive visualizations and ways to interact with the
+  data from the paper (<em>Gene conversion is a key driver of diversity hotspots in
+  M. tuberculosis antigens and virulence-associated loci</em>,
+  <a href="https://www.biorxiv.org/content/10.64898/2026.02.26.708061v2">https://www.biorxiv.org/content/10.64898/2026.02.26.708061v2</a>).
+  Below is a table of contents of sites/pages with interactive visualizations of the
+  data and results.
+</p>
+
+<h2>Table of Contents</h2>
+<ul class="toc">
+  <li>
+    <a href="NucDivHotspots_Viewer/index.html">NucDivHotspots Viewer</a>
+    <p>Browse long-read/assembly alignment support across the 37 nucleotide-diversity
+      hotspot windows, per Mtb151 sample.</p>
+  </li>
+  <li>
+    <a href="MtbParalogRegions_Viewer/index.html">MtbParalogRegions Viewer</a>
+    <p>Browse long-read/assembly alignment support (plus the H37Rv self-to-self homology
+      map) across ~200 paralogous regions in the H37Rv genome, per Mtb151 sample.</p>
+  </li>
+  <li>
+    <a href="Mtb151_GCE_GenomeViz/index.html">Mtb151 Gene Conversion Genome Browser</a>
+    <p>Explore all detected gene conversion events in an interactive genome browser
+      (built with Gosling.js).</p>
+  </li>
+</ul>
+
+<footer>
+  See <a href="README.md">README.md</a> for how this site is structured and generated.
+</footer>
+
+</body>
+</html>

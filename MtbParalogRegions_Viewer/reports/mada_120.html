@@ -1,0 +1,329 @@
+<html>
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>IGV Variant Inspector </title>
+
+    <!-- igv -->
+
+    <script src="https://cdn.jsdelivr.net/npm/igv@3.5.2/dist/igv.min.js"></script>
+
+
+    <style type="text/css">
+        body {
+            font-size: 80%;
+            font-family: 'Lucida Grande', Verdana, Arial, Sans-Serif;
+        }
+
+
+    </style>
+
+    <!-- selector table style -->
+    <style>
+
+        thead {
+            position: sticky;
+            top: 0;
+        }
+
+        tr {
+            cursor: default;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: lightblue;
+        }
+
+        th {
+            background-color: lightskyblue;
+            color: white;
+            cursor: pointer;
+        }
+
+        .selected {
+            background-color: lightblue !important;
+            outline: solid thin darkblue !important;
+        }
+    </style>
+
+    <!-- accordian style,  ref: https://alligator.io/css/collapsible/ -->
+    <style type="text/css">
+        .wrap-collabsible {
+            margin-bottom: 1.2rem;
+        }
+
+        input[type='checkbox'] {
+            display: none;
+        }
+
+        .lbl-toggle {
+            display: block;
+
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            text-align: left;
+
+            padding: 1rem;
+
+            color: black;
+            background: #dddddd;
+
+            cursor: pointer;
+
+            border-radius: 7px;
+            transition: all 0.25s ease-out;
+        }
+
+        .lbl-toggle:hover {
+            color: blue;
+        }
+
+        .lbl-toggle::before {
+            content: ' ';
+            display: inline-block;
+
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 5px solid currentColor;
+            vertical-align: middle;
+            margin-right: .7rem;
+            transform: translateY(-2px);
+
+            transition: transform .2s ease-out;
+        }
+
+        .toggle:checked + .lbl-toggle::before {
+            transform: rotate(90deg) translateX(-3px);
+        }
+
+        .collapsible-content {
+            max-height: 0px;
+            overflow: auto;
+            transition: max-height .25s ease-in-out;
+        }
+
+        .toggle:checked + .lbl-toggle + .collapsible-content {
+            max-height: 350px;
+        }
+
+        .toggle:checked + .lbl-toggle {
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .collapsible-content .content-inner {
+            background: rgba(250, 224, 66, .2);
+            border-bottom: 1px solid rgba(250, 224, 66, .45);
+            border-bottom-left-radius: 7px;
+            border-bottom-right-radius: 7px;
+            padding: .5rem 1rem;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div id="container" style="display: flex; flex-direction: column">
+    <div id="tableContainer" class="wrap-collabsible">
+        <input id="collapsible" class="toggle" type="checkbox" checked>
+        <label for="collapsible" class="lbl-toggle">Variants</label>
+        <div class="collapsible-content">
+            <div id="tableSelectorDiv"></div>
+        </div>
+    </div>
+</div>
+
+<div id="igvContainer">
+    <div id="igvDiv"></div>
+</div>
+
+
+<script type="text/javascript">
+
+    const tableJson = {"headers": ["unique_id", "Chrom", "Start", "End", "HmRegionID", "Overlap_Genes", "Length", "PR_SetID"], "rows": [[0, "NC_000962.3", "80184", "80523", "PR_HmRegion_000", "Rv0071", "339", "PR_Set_1"], [1, "NC_000962.3", "80623", "82664", "PR_HmRegion_001", "Rv0072,Rv0073", "2041", "PR_Set_2"], [2, "NC_000962.3", "103705", "105130", "PR_HmRegion_002", "Rv0094c,Rv0095c", "1425", "PR_Set_3"], [3, "NC_000962.3", "149571", "149808", "PR_HmRegion_003", "PE_PGRS2", "237", "PR_Set_4"], [4, "NC_000962.3", "177203", "177447", "PR_HmRegion_004", "_", "244", "PR_Set_5"], [5, "NC_000962.3", "196950", "204585", "PR_HmRegion_005", "yrbE1A,yrbE1B,mce1A,mce1B,mce1C,mce1D,lprK", "7635", "PR_Set_6"], [6, "NC_000962.3", "272850", "272955", "PR_HmRegion_006", "_", "105", "PR_Set_7"], [7, "NC_000962.3", "308996", "309532", "PR_HmRegion_007", "PPE2", "536", "PR_Set_8"], [8, "NC_000962.3", "309898", "310101", "PR_HmRegion_008", "Rv0257", "203", "PR_Set_9"], [9, "NC_000962.3", "332698", "336379", "PR_HmRegion_009", "vapC25,vapB25,PE_PGRS3", "3681", "PR_Set_10"], [10, "NC_000962.3", "336565", "339142", "PR_HmRegion_010", "PE_PGRS4", "2577", "PR_Set_10"], [11, "NC_000962.3", "339372", "339909", "PR_HmRegion_011", "PPE3", "537", "PR_Set_8"], [12, "NC_000962.3", "361334", "362020", "PR_HmRegion_012", "PE_PGRS5", "686", "PR_Set_11"], [13, "NC_000962.3", "366432", "368602", "PR_HmRegion_013", "PPE5", "2170", "PR_Set_12"], [14, "NC_000962.3", "373173", "375119", "PR_HmRegion_014", "PPE6", "1946", "PR_Set_12"], [15, "NC_000962.3", "400151", "401701", "PR_HmRegion_015", "Rv0336", "1550", "PR_Set_13"], [16, "NC_000962.3", "424843", "425566", "PR_HmRegion_016", "PPE8", "723", "PR_Set_14"], [17, "NC_000962.3", "433399", "434095", "PR_HmRegion_017", "PPE8", "696", "PR_Set_14"], [18, "NC_000962.3", "473743", "474099", "PR_HmRegion_018", "Rv0393", "356", "PR_Set_15"], [19, "NC_000962.3", "475809", "476177", "PR_HmRegion_019", "Rv0397", "368", "PR_Set_15"], [20, "NC_000962.3", "562306", "562394", "PR_HmRegion_020", "Rv0471c", "88", "PR_Set_16"], [21, "NC_000962.3", "577285", "577380", "PR_HmRegion_021", "Rv0487", "95", "PR_Set_17"], [22, "NC_000962.3", "577401", "577496", "PR_HmRegion_022", "_", "95", "PR_Set_17"], [23, "NC_000962.3", "580576", "580660", "PR_HmRegion_023", "senX3", "84", "PR_Set_18"], [24, "NC_000962.3", "580730", "580814", "PR_HmRegion_024", "regX3", "84", "PR_Set_18"], [25, "NC_000962.3", "606510", "608060", "PR_HmRegion_025", "Rv0515,Rv0516c", "1550", "PR_Set_13"], [26, "NC_000962.3", "642713", "642814", "PR_HmRegion_026", "fadD8", "101", "PR_Set_19"], [27, "NC_000962.3", "685218", "692589", "PR_HmRegion_027", "yrbE2A,yrbE2B,mce2A,mce2B,Rv0590A,mce2C,mce2D,lprL", "7371", "PR_Set_6"], [28, "NC_000962.3", "701363", "702728", "PR_HmRegion_028", "Rv0605,Rv0606", "1365", "PR_Set_20"], [29, "NC_000962.3", "718763", "719929", "PR_HmRegion_029", "Rv0628c", "1166", "PR_Set_21"], [30, "NC_000962.3", "832044", "832356", "PR_HmRegion_030", "Rv0740", "312", "PR_Set_22"], [31, "NC_000962.3", "835775", "836519", "PR_HmRegion_031", "PE_PGRS9", "744", "PR_Set_23"], [32, "NC_000962.3", "838485", "841665", "PR_HmRegion_032", "PE_PGRS10,vapB31,vapC31", "3180", "PR_Set_10"], [33, "NC_000962.3", "842019", "842331", "PR_HmRegion_033", "Rv0750", "312", "PR_Set_22"], [34, "NC_000962.3", "889019", "891461", "PR_HmRegion_034", "Rv0795,Rv0796,Rv0797", "2442", "PR_Set_24"], [35, "NC_000962.3", "908180", "909346", "PR_HmRegion_035", "sseC2,cysA2", "1166", "PR_Set_25"], [36, "NC_000962.3", "921579", "921893", "PR_HmRegion_036", "Rv0828c,Rv0829", "314", "PR_Set_20"], [37, "NC_000962.3", "925071", "927514", "PR_HmRegion_037", "PE_PGRS12,PE_PGRS13", "2443", "PR_Set_10"], [38, "NC_000962.3", "960166", "960326", "PR_HmRegion_038", "_", "160", "PR_Set_26"], [39, "NC_000962.3", "972557", "973723", "PR_HmRegion_039", "Rv0874c", "1166", "PR_Set_21"], [40, "NC_000962.3", "1093195", "1094592", "PR_HmRegion_040", "PE_PGRS17", "1397", "PR_Set_27"], [41, "NC_000962.3", "1094827", "1096692", "PR_HmRegion_041", "Rv0979c,rpmF,PE_PGRS18", "1865", "PR_Set_27"], [42, "NC_000962.3", "1160538", "1161167", "PR_HmRegion_042", "esxI,esxJ", "629", "PR_Set_28"], [43, "NC_000962.3", "1164571", "1165549", "PR_HmRegion_043", "Rv1041c,Rv1042c", "978", "PR_Set_29"], [44, "NC_000962.3", "1169296", "1170733", "PR_HmRegion_044", "Rv1047", "1437", "PR_Set_30"], [45, "NC_000962.3", "1188420", "1190175", "PR_HmRegion_045", "PE_PGRS19", "1755", "PR_Set_31"], [46, "NC_000962.3", "1190756", "1191899", "PR_HmRegion_046", "PE_PGRS20", "1143", "PR_Set_31"], [47, "NC_000962.3", "1211526", "1212209", "PR_HmRegion_047", "PE_PGRS21", "683", "PR_Set_32"], [48, "NC_000962.3", "1216433", "1217118", "PR_HmRegion_048", "PE_PGRS22", "685", "PR_Set_32"], [49, "NC_000962.3", "1275924", "1276053", "PR_HmRegion_049", "_", "129", "PR_Set_33"], [50, "NC_000962.3", "1276292", "1277797", "PR_HmRegion_050", "Rv1148c", "1505", "PR_Set_34"], [51, "NC_000962.3", "1277842", "1278820", "PR_HmRegion_051", "Rv1149,Rv1150", "978", "PR_Set_29"], [52, "NC_000962.3", "1287354", "1288094", "PR_HmRegion_052", "narG", "740", "PR_Set_35"], [53, "NC_000962.3", "1338923", "1340433", "PR_HmRegion_053", "PE13,PPE18", "1510", "PR_Set_36"], [54, "NC_000962.3", "1340494", "1341292", "PR_HmRegion_054", "PPE18,esxK,esxL", "798", "PR_Set_28"], [55, "NC_000962.3", "1341295", "1342730", "PR_HmRegion_055", "Rv1199c", "1435", "PR_Set_30"], [56, "NC_000962.3", "1357376", "1357613", "PR_HmRegion_056", "PE14", "237", "PR_Set_4"], [57, "NC_000962.3", "1451777", "1451998", "PR_HmRegion_057", "thrC,thrB", "221", "PR_Set_37"], [58, "NC_000962.3", "1468141", "1469654", "PR_HmRegion_058", "Rv1313c", "1513", "PR_Set_38"], [59, "NC_000962.3", "1489087", "1489833", "PR_HmRegion_059", "PE_PGRS24", "746", "PR_Set_10"], [60, "NC_000962.3", "1532461", "1533653", "PR_HmRegion_060", "PPE19", "1192", "PR_Set_36"], [61, "NC_000962.3", "1541948", "1543318", "PR_HmRegion_061", "Rv1369c,Rv1370c", "1370", "PR_Set_24"], [62, "NC_000962.3", "1573170", "1573856", "PR_HmRegion_062", "PE_PGRS25", "686", "PR_Set_11"], [63, "NC_000962.3", "1631389", "1632123", "PR_HmRegion_063", "PE_PGRS27", "734", "PR_Set_39"], [64, "NC_000962.3", "1633310", "1634790", "PR_HmRegion_064", "PE_PGRS27", "1480", "PR_Set_23"], [65, "NC_000962.3", "1636705", "1639561", "PR_HmRegion_065", "PE_PGRS28,Rv1453", "2856", "PR_Set_23"], [66, "NC_000962.3", "1644262", "1644365", "PR_HmRegion_066", "Rv1459c", "103", "PR_Set_40"], [67, "NC_000962.3", "1701374", "1702581", "PR_HmRegion_067", "Rv1510", "1207", "PR_Set_41"], [68, "NC_000962.3", "1702675", "1702849", "PR_HmRegion_068", "_", "174", "PR_Set_9"], [69, "NC_000962.3", "1722178", "1728375", "PR_HmRegion_069", "pks5", "6197", "PR_Set_42"], [70, "NC_000962.3", "1735509", "1735826", "PR_HmRegion_070", "_", "317", "PR_Set_43"], [71, "NC_000962.3", "1779808", "1780054", "PR_HmRegion_071", "Rv1574", "246", "PR_Set_44"], [72, "NC_000962.3", "1780334", "1780580", "PR_HmRegion_072", "Rv1575", "246", "PR_Set_44"], [73, "NC_000962.3", "1780615", "1782817", "PR_HmRegion_073", "Rv1575,Rv1576c,Rv1577c,Rv1578c", "2202", "PR_Set_45"], [74, "NC_000962.3", "1788513", "1789865", "PR_HmRegion_074", "Rv1587c,Rv1588c", "1352", "PR_Set_3"], [75, "NC_000962.3", "1814852", "1815128", "PR_HmRegion_075", "_", "276", "PR_Set_9"], [76, "NC_000962.3", "1875403", "1878873", "PR_HmRegion_076", "pks7", "3470", "PR_Set_46"], [77, "NC_000962.3", "1879290", "1879378", "PR_HmRegion_077", "pks7", "88", "PR_Set_16"], [78, "NC_000962.3", "1881800", "1883442", "PR_HmRegion_078", "pks8", "1642", "PR_Set_46"], [79, "NC_000962.3", "1895352", "1895420", "PR_HmRegion_079", "_", "68", "PR_Set_47"], [80, "NC_000962.3", "1895523", "1895591", "PR_HmRegion_080", "_", "68", "PR_Set_47"], [81, "NC_000962.3", "1946848", "1947023", "PR_HmRegion_081", "_", "175", "PR_Set_48"], [82, "NC_000962.3", "1963419", "1964160", "PR_HmRegion_082", "narX", "741", "PR_Set_35"], [83, "NC_000962.3", "1987686", "1989059", "PR_HmRegion_083", "plcD,Rv1756c,Rv1757c,cut1", "1373", "PR_Set_24"], [84, "NC_000962.3", "1996098", "1998612", "PR_HmRegion_084", "Rv1763,Rv1764,Rv1765c", "2514", "PR_Set_24"], [85, "NC_000962.3", "2025301", "2026163", "PR_HmRegion_085", "PPE25", "862", "PR_Set_49"], [86, "NC_000962.3", "2028425", "2029242", "PR_HmRegion_086", "PPE27", "817", "PR_Set_49"], [87, "NC_000962.3", "2030331", "2030983", "PR_HmRegion_087", "esxM,esxN", "652", "PR_Set_28"], [88, "NC_000962.3", "2047595", "2047908", "PR_HmRegion_088", "Rv1805c", "313", "PR_Set_43"], [89, "NC_000962.3", "2059429", "2059579", "PR_HmRegion_089", "_", "150", "PR_Set_19"], [90, "NC_000962.3", "2074435", "2074521", "PR_HmRegion_090", "Rv1829", "86", "PR_Set_50"], [91, "NC_000962.3", "2074547", "2074633", "PR_HmRegion_091", "_", "86", "PR_Set_50"], [92, "NC_000962.3", "2165326", "2165433", "PR_HmRegion_092", "PPE34", "107", "PR_Set_51"], [93, "NC_000962.3", "2165476", "2165583", "PR_HmRegion_093", "PPE34", "107", "PR_Set_51"], [94, "NC_000962.3", "2195856", "2197360", "PR_HmRegion_094", "Rv1944c,Rv1945", "1504", "PR_Set_34"], [95, "NC_000962.3", "2198686", "2198815", "PR_HmRegion_095", "Rv1948c", "129", "PR_Set_33"], [96, "NC_000962.3", "2262009", "2263169", "PR_HmRegion_096", "Rv2015c", "1160", "PR_Set_24"], [97, "NC_000962.3", "2294816", "2298269", "PR_HmRegion_097", "pks12", "3453", "PR_Set_46"], [98, "NC_000962.3", "2299196", "2300826", "PR_HmRegion_098", "pks12", "1630", "PR_Set_46"], [99, "NC_000962.3", "2300912", "2306889", "PR_HmRegion_099", "pks12", "5977", "PR_Set_46"], [100, "NC_000962.3", "2337936", "2338094", "PR_HmRegion_100", "Rv2081c", "158", "PR_Set_52"], [101, "NC_000962.3", "2340529", "2340687", "PR_HmRegion_101", "Rv2082", "158", "PR_Set_52"], [102, "NC_000962.3", "2341059", "2341697", "PR_HmRegion_102", "Rv2083", "638", "PR_Set_53"], [103, "NC_000962.3", "2347379", "2347613", "PR_HmRegion_103", "Rv2090", "234", "PR_Set_37"], [104, "NC_000962.3", "2358502", "2360031", "PR_HmRegion_104", "Rv2100", "1529", "PR_Set_54"], [105, "NC_000962.3", "2365403", "2366771", "PR_HmRegion_105", "Rv2105,Rv2106", "1368", "PR_Set_24"], [106, "NC_000962.3", "2430113", "2431474", "PR_HmRegion_106", "Rv2167c,Rv2168c", "1361", "PR_Set_24"], [107, "NC_000962.3", "2439139", "2439948", "PR_HmRegion_107", "pknL,Rv2177c", "809", "PR_Set_55"], [108, "NC_000962.3", "2461319", "2461390", "PR_HmRegion_108", "qcrB", "71", "PR_Set_56"], [109, "NC_000962.3", "2461434", "2461504", "PR_HmRegion_109", "Rv2197c", "70", "PR_Set_56"], [110, "NC_000962.3", "2531892", "2532002", "PR_HmRegion_110", "Rv2258c", "110", "PR_Set_40"], [111, "NC_000962.3", "2532005", "2532209", "PR_HmRegion_111", "_", "204", "PR_Set_40"], [112, "NC_000962.3", "2550005", "2551370", "PR_HmRegion_112", "Rv2277c,Rv2278,Rv2279", "1365", "PR_Set_24"], [113, "NC_000962.3", "2625885", "2626683", "PR_HmRegion_113", "esxO,esxP,Rv2348c", "798", "PR_Set_28"], [114, "NC_000962.3", "2634780", "2637028", "PR_HmRegion_114", "PPE39,Rv2354,Rv2355", "2248", "PR_Set_24"], [115, "NC_000962.3", "2637068", "2637535", "PR_HmRegion_115", "_", "467", "PR_Set_9"], [116, "NC_000962.3", "2637928", "2639613", "PR_HmRegion_116", "PPE40", "1685", "PR_Set_24"], [117, "NC_000962.3", "2650377", "2651923", "PR_HmRegion_117", "Rv2370c,PE_PGRS40", "1546", "PR_Set_23"], [118, "NC_000962.3", "2687131", "2687217", "PR_HmRegion_118", "che1", "86", "PR_Set_26"], [119, "NC_000962.3", "2720634", "2721442", "PR_HmRegion_119", "Rv2423,Rv2424c", "808", "PR_Set_55"], [120, "NC_000962.3", "2784600", "2785977", "PR_HmRegion_120", "Rv2478c,Rv2479c,Rv2480c", "1377", "PR_Set_24"], [121, "NC_000962.3", "2796717", "2797499", "PR_HmRegion_121", "PE_PGRS42,Rv2488c", "782", "PR_Set_57"], [122, "NC_000962.3", "2805574", "2806355", "PR_HmRegion_122", "PE_PGRS43", "781", "PR_Set_57"], [123, "NC_000962.3", "2828493", "2829936", "PR_HmRegion_123", "Rv2512c", "1443", "PR_Set_30"], [124, "NC_000962.3", "2866468", "2867121", "PR_HmRegion_124", "lppA", "653", "PR_Set_58"], [125, "NC_000962.3", "2867124", "2867777", "PR_HmRegion_125", "lppA,lppB", "653", "PR_Set_58"], [126, "NC_000962.3", "2882289", "2884330", "PR_HmRegion_126", "Rv2563,glnQ", "2041", "PR_Set_2"], [127, "NC_000962.3", "2944267", "2945226", "PR_HmRegion_127", "PE_PGRS45", "959", "PR_Set_27"], [128, "NC_000962.3", "2971756", "2971987", "PR_HmRegion_128", "Rv2647", "231", "PR_Set_44"], [129, "NC_000962.3", "2972104", "2973463", "PR_HmRegion_129", "Rv2648,Rv2649", "1359", "PR_Set_24"], [130, "NC_000962.3", "2973775", "2975987", "PR_HmRegion_130", "Rv2650c,Rv2651c,Rv2652c", "2212", "PR_Set_45"], [131, "NC_000962.3", "2982934", "2983854", "PR_HmRegion_131", "Rv2665,Rv2666", "920", "PR_Set_30"], [132, "NC_000962.3", "2996010", "2996160", "PR_HmRegion_132", "Rv2680", "150", "PR_Set_26"], [133, "NC_000962.3", "3000614", "3001893", "PR_HmRegion_133", "arsA", "1279", "PR_Set_59"], [134, "NC_000962.3", "3001983", "3003262", "PR_HmRegion_134", "arsB1", "1279", "PR_Set_59"], [135, "NC_000962.3", "3007037", "3007220", "PR_HmRegion_135", "Rv2689c", "183", "PR_Set_26"], [136, "NC_000962.3", "3082465", "3082769", "PR_HmRegion_136", "Rv2774c", "304", "PR_Set_1"], [137, "NC_000962.3", "3100173", "3102233", "PR_HmRegion_137", "Rv2791c,Rv2792c", "2060", "PR_Set_20"], [138, "NC_000962.3", "3112883", "3113179", "PR_HmRegion_138", "Rv2804c,Rv2805", "296", "PR_Set_60"], [139, "NC_000962.3", "3113641", "3113937", "PR_HmRegion_139", "Rv2807", "296", "PR_Set_60"], [140, "NC_000962.3", "3119183", "3123577", "PR_HmRegion_140", "Rv2814c,Rv2815c", "4394", "PR_Set_24"], [141, "NC_000962.3", "3132891", "3133455", "PR_HmRegion_141", "Rv2825c", "564", "PR_Set_61"], [142, "NC_000962.3", "3135787", "3136351", "PR_HmRegion_142", "Rv2828c,Rv2828A", "564", "PR_Set_61"], [143, "NC_000962.3", "3155882", "3155981", "PR_HmRegion_143", "_", "99", "PR_Set_62"], [144, "NC_000962.3", "3155990", "3156089", "PR_HmRegion_144", "_", "99", "PR_Set_62"], [145, "NC_000962.3", "3171448", "3171627", "PR_HmRegion_145", "Rv2859c,glnA4", "179", "PR_Set_63"], [146, "NC_000962.3", "3192203", "3192354", "PR_HmRegion_146", "_", "151", "PR_Set_26"], [147, "NC_000962.3", "3194137", "3196202", "PR_HmRegion_147", "Rv2884,Rv2885c,Rv2886c", "2065", "PR_Set_20"], [148, "NC_000962.3", "3239454", "3239775", "PR_HmRegion_148", "fpg", "321", "PR_Set_63"], [149, "NC_000962.3", "3246396", "3248376", "PR_HmRegion_149", "ppsA", "1980", "PR_Set_64"], [150, "NC_000962.3", "3251819", "3253802", "PR_HmRegion_150", "ppsB", "1983", "PR_Set_64"], [151, "NC_000962.3", "3276484", "3282708", "PR_HmRegion_151", "mas", "6224", "PR_Set_42"], [152, "NC_000962.3", "3317533", "3317739", "PR_HmRegion_152", "_", "206", "PR_Set_5"], [153, "NC_000962.3", "3319468", "3319670", "PR_HmRegion_153", "pca", "202", "PR_Set_19"], [154, "NC_000962.3", "3333757", "3335814", "PR_HmRegion_154", "thiL,Rv2978c,Rv2979c", "2057", "PR_Set_20"], [155, "NC_000962.3", "3376926", "3378450", "PR_HmRegion_155", "PPE46,PE27A", "1524", "PR_Set_65"], [156, "NC_000962.3", "3379363", "3381026", "PR_HmRegion_156", "PPE47,PPE48,PE29", "1663", "PR_Set_65"], [157, "NC_000962.3", "3381311", "3382749", "PR_HmRegion_157", "Rv3023c", "1438", "PR_Set_30"], [158, "NC_000962.3", "3481324", "3482760", "PR_HmRegion_158", "Rv3115", "1436", "PR_Set_30"], [159, "NC_000962.3", "3483945", "3485111", "PR_HmRegion_159", "cysA3,sseC1", "1166", "PR_Set_25"], [160, "NC_000962.3", "3527948", "3529180", "PR_HmRegion_160", "PPE53", "1232", "PR_Set_24"], [161, "NC_000962.3", "3551212", "3552587", "PR_HmRegion_161", "Rv3184,Rv3185", "1375", "PR_Set_24"], [162, "NC_000962.3", "3552704", "3554070", "PR_HmRegion_162", "Rv3186,Rv3187", "1366", "PR_Set_24"], [163, "NC_000962.3", "3594262", "3594343", "PR_HmRegion_163", "_", "81", "PR_Set_66"], [164, "NC_000962.3", "3594374", "3594455", "PR_HmRegion_164", "_", "81", "PR_Set_66"], [165, "NC_000962.3", "3710379", "3712822", "PR_HmRegion_165", "Rv3325,Rv3326,Rv3327", "2443", "PR_Set_24"], [166, "NC_000962.3", "3730350", "3731064", "PR_HmRegion_166", "PPE54", "714", "PR_Set_67"], [167, "NC_000962.3", "3732078", "3732792", "PR_HmRegion_167", "PPE54", "714", "PR_Set_67"], [168, "NC_000962.3", "3735635", "3736314", "PR_HmRegion_168", "PPE54", "679", "PR_Set_67"], [169, "NC_000962.3", "3738002", "3738776", "PR_HmRegion_169", "PE_PGRS49,PE_PGRS50", "774", "PR_Set_39"], [170, "NC_000962.3", "3743243", "3743501", "PR_HmRegion_170", "Rv3346c", "258", "PR_Set_68"], [171, "NC_000962.3", "3743709", "3753178", "PR_HmRegion_171", "PPE55", "9469", "PR_Set_24"], [172, "NC_000962.3", "3753330", "3754361", "PR_HmRegion_172", "Rv3348,Rv3349c", "1031", "PR_Set_69"], [173, "NC_000962.3", "3755950", "3767119", "PR_HmRegion_173", "PPE56", "11169", "PR_Set_24"], [174, "NC_000962.3", "3769559", "3769853", "PR_HmRegion_174", "Rv3355c,folD", "294", "PR_Set_68"], [175, "NC_000962.3", "3795041", "3796426", "PR_HmRegion_175", "Rv3380c,Rv3381c", "1385", "PR_Set_24"], [176, "NC_000962.3", "3802143", "3802720", "PR_HmRegion_176", "PE_PGRS52", "577", "PR_Set_10"], [177, "NC_000962.3", "3841532", "3842904", "PR_HmRegion_177", "Rv3424c,PPE57", "1372", "PR_Set_48"], [178, "NC_000962.3", "3842946", "3843702", "PR_HmRegion_178", "PPE58", "756", "PR_Set_48"], [179, "NC_000962.3", "3846460", "3847892", "PR_HmRegion_179", "PPE59,Rv3430c", "1432", "PR_Set_48"], [180, "NC_000962.3", "3883535", "3884921", "PR_HmRegion_180", "Rv3466,Rv3467", "1386", "PR_Set_3"], [181, "NC_000962.3", "3890771", "3892140", "PR_HmRegion_181", "Rv3474,Rv3475", "1369", "PR_Set_24"], [182, "NC_000962.3", "3894016", "3895588", "PR_HmRegion_182", "PE31,PPE60", "1572", "PR_Set_36"], [183, "NC_000962.3", "3930988", "3936438", "PR_HmRegion_183", "PE_PGRS54", "5450", "PR_Set_10"], [184, "NC_000962.3", "3941407", "3945597", "PR_HmRegion_184", "PE_PGRS55,PE_PGRS56,fadD18", "4190", "PR_Set_10"], [185, "NC_000962.3", "3945777", "3951329", "PR_HmRegion_185", "PE_PGRS57,fadD19", "5552", "PR_Set_10"], [186, "NC_000962.3", "4052970", "4053216", "PR_HmRegion_186", "Rv3611", "246", "PR_Set_70"], [187, "NC_000962.3", "4053303", "4053549", "PR_HmRegion_187", "Rv3611,Rv3612c", "246", "PR_Set_70"], [188, "NC_000962.3", "4053631", "4054094", "PR_HmRegion_188", "Rv3612c,Rv3613c", "463", "PR_Set_9"], [189, "NC_000962.3", "4059983", "4060591", "PR_HmRegion_189", "esxV,esxW", "608", "PR_Set_28"], [190, "NC_000962.3", "4069248", "4070458", "PR_HmRegion_190", "Rv3630", "1210", "PR_Set_41"], [191, "NC_000962.3", "4077792", "4078201", "PR_HmRegion_191", "Rv3639c", "409", "PR_Set_5"], [192, "NC_000962.3", "4134600", "4134729", "PR_HmRegion_192", "Rv3693", "129", "PR_Set_7"], [193, "NC_000962.3", "4221088", "4222560", "PR_HmRegion_193", "Rv3776", "1472", "PR_Set_54"], [194, "NC_000962.3", "4252853", "4254367", "PR_HmRegion_194", "fadE35,Rv3798", "1514", "PR_Set_38"], [195, "NC_000962.3", "4293408", "4299541", "PR_HmRegion_195", "pks2", "6133", "PR_Set_42"], [196, "NC_000962.3", "4301541", "4303432", "PR_HmRegion_196", "fadD23,Rv3827c,Rv3828c,Rv3829c", "1891", "PR_Set_20"], [197, "NC_000962.3", "4318340", "4319371", "PR_HmRegion_197", "Rv3844,Rv3845", "1031", "PR_Set_69"], [198, "NC_000962.3", "4320044", "4320106", "PR_HmRegion_198", "_", "62", "PR_Set_5"], [199, "NC_000962.3", "4383094", "4383754", "PR_HmRegion_199", "Rv3897c,Rv3898c", "660", "PR_Set_53"]]}
+    const locusDictionary = {"0": "NC_000962.3:80186-80523", "1": "NC_000962.3:80625-82664", "2": "NC_000962.3:103707-105130", "3": "NC_000962.3:149573-149808", "4": "NC_000962.3:177205-177447", "5": "NC_000962.3:196952-204585", "6": "NC_000962.3:272852-272955", "7": "NC_000962.3:308998-309532", "8": "NC_000962.3:309900-310101", "9": "NC_000962.3:332700-336379", "10": "NC_000962.3:336567-339142", "11": "NC_000962.3:339374-339909", "12": "NC_000962.3:361336-362020", "13": "NC_000962.3:366434-368602", "14": "NC_000962.3:373175-375119", "15": "NC_000962.3:400153-401701", "16": "NC_000962.3:424845-425566", "17": "NC_000962.3:433401-434095", "18": "NC_000962.3:473745-474099", "19": "NC_000962.3:475811-476177", "20": "NC_000962.3:562308-562394", "21": "NC_000962.3:577287-577380", "22": "NC_000962.3:577403-577496", "23": "NC_000962.3:580578-580660", "24": "NC_000962.3:580732-580814", "25": "NC_000962.3:606512-608060", "26": "NC_000962.3:642715-642814", "27": "NC_000962.3:685220-692589", "28": "NC_000962.3:701365-702728", "29": "NC_000962.3:718765-719929", "30": "NC_000962.3:832046-832356", "31": "NC_000962.3:835777-836519", "32": "NC_000962.3:838487-841665", "33": "NC_000962.3:842021-842331", "34": "NC_000962.3:889021-891461", "35": "NC_000962.3:908182-909346", "36": "NC_000962.3:921581-921893", "37": "NC_000962.3:925073-927514", "38": "NC_000962.3:960168-960326", "39": "NC_000962.3:972559-973723", "40": "NC_000962.3:1093197-1094592", "41": "NC_000962.3:1094829-1096692", "42": "NC_000962.3:1160540-1161167", "43": "NC_000962.3:1164573-1165549", "44": "NC_000962.3:1169298-1170733", "45": "NC_000962.3:1188422-1190175", "46": "NC_000962.3:1190758-1191899", "47": "NC_000962.3:1211528-1212209", "48": "NC_000962.3:1216435-1217118", "49": "NC_000962.3:1275926-1276053", "50": "NC_000962.3:1276294-1277797", "51": "NC_000962.3:1277844-1278820", "52": "NC_000962.3:1287356-1288094", "53": "NC_000962.3:1338925-1340433", "54": "NC_000962.3:1340496-1341292", "55": "NC_000962.3:1341297-1342730", "56": "NC_000962.3:1357378-1357613", "57": "NC_000962.3:1451779-1451998", "58": "NC_000962.3:1468143-1469654", "59": "NC_000962.3:1489089-1489833", "60": "NC_000962.3:1532463-1533653", "61": "NC_000962.3:1541950-1543318", "62": "NC_000962.3:1573172-1573856", "63": "NC_000962.3:1631391-1632123", "64": "NC_000962.3:1633312-1634790", "65": "NC_000962.3:1636707-1639561", "66": "NC_000962.3:1644264-1644365", "67": "NC_000962.3:1701376-1702581", "68": "NC_000962.3:1702677-1702849", "69": "NC_000962.3:1722180-1728375", "70": "NC_000962.3:1735511-1735826", "71": "NC_000962.3:1779810-1780054", "72": "NC_000962.3:1780336-1780580", "73": "NC_000962.3:1780617-1782817", "74": "NC_000962.3:1788515-1789865", "75": "NC_000962.3:1814854-1815128", "76": "NC_000962.3:1875405-1878873", "77": "NC_000962.3:1879292-1879378", "78": "NC_000962.3:1881802-1883442", "79": "NC_000962.3:1895354-1895420", "80": "NC_000962.3:1895525-1895591", "81": "NC_000962.3:1946850-1947023", "82": "NC_000962.3:1963421-1964160", "83": "NC_000962.3:1987688-1989059", "84": "NC_000962.3:1996100-1998612", "85": "NC_000962.3:2025303-2026163", "86": "NC_000962.3:2028427-2029242", "87": "NC_000962.3:2030333-2030983", "88": "NC_000962.3:2047597-2047908", "89": "NC_000962.3:2059431-2059579", "90": "NC_000962.3:2074437-2074521", "91": "NC_000962.3:2074549-2074633", "92": "NC_000962.3:2165328-2165433", "93": "NC_000962.3:2165478-2165583", "94": "NC_000962.3:2195858-2197360", "95": "NC_000962.3:2198688-2198815", "96": "NC_000962.3:2262011-2263169", "97": "NC_000962.3:2294818-2298269", "98": "NC_000962.3:2299198-2300826", "99": "NC_000962.3:2300914-2306889", "100": "NC_000962.3:2337938-2338094", "101": "NC_000962.3:2340531-2340687", "102": "NC_000962.3:2341061-2341697", "103": "NC_000962.3:2347381-2347613", "104": "NC_000962.3:2358504-2360031", "105": "NC_000962.3:2365405-2366771", "106": "NC_000962.3:2430115-2431474", "107": "NC_000962.3:2439141-2439948", "108": "NC_000962.3:2461321-2461390", "109": "NC_000962.3:2461436-2461504", "110": "NC_000962.3:2531894-2532002", "111": "NC_000962.3:2532007-2532209", "112": "NC_000962.3:2550007-2551370", "113": "NC_000962.3:2625887-2626683", "114": "NC_000962.3:2634782-2637028", "115": "NC_000962.3:2637070-2637535", "116": "NC_000962.3:2637930-2639613", "117": "NC_000962.3:2650379-2651923", "118": "NC_000962.3:2687133-2687217", "119": "NC_000962.3:2720636-2721442", "120": "NC_000962.3:2784602-2785977", "121": "NC_000962.3:2796719-2797499", "122": "NC_000962.3:2805576-2806355", "123": "NC_000962.3:2828495-2829936", "124": "NC_000962.3:2866470-2867121", "125": "NC_000962.3:2867126-2867777", "126": "NC_000962.3:2882291-2884330", "127": "NC_000962.3:2944269-2945226", "128": "NC_000962.3:2971758-2971987", "129": "NC_000962.3:2972106-2973463", "130": "NC_000962.3:2973777-2975987", "131": "NC_000962.3:2982936-2983854", "132": "NC_000962.3:2996012-2996160", "133": "NC_000962.3:3000616-3001893", "134": "NC_000962.3:3001985-3003262", "135": "NC_000962.3:3007039-3007220", "136": "NC_000962.3:3082467-3082769", "137": "NC_000962.3:3100175-3102233", "138": "NC_000962.3:3112885-3113179", "139": "NC_000962.3:3113643-3113937", "140": "NC_000962.3:3119185-3123577", "141": "NC_000962.3:3132893-3133455", "142": "NC_000962.3:3135789-3136351", "143": "NC_000962.3:3155884-3155981", "144": "NC_000962.3:3155992-3156089", "145": "NC_000962.3:3171450-3171627", "146": "NC_000962.3:3192205-3192354", "147": "NC_000962.3:3194139-3196202", "148": "NC_000962.3:3239456-3239775", "149": "NC_000962.3:3246398-3248376", "150": "NC_000962.3:3251821-3253802", "151": "NC_000962.3:3276486-3282708", "152": "NC_000962.3:3317535-3317739", "153": "NC_000962.3:3319470-3319670", "154": "NC_000962.3:3333759-3335814", "155": "NC_000962.3:3376928-3378450", "156": "NC_000962.3:3379365-3381026", "157": "NC_000962.3:3381313-3382749", "158": "NC_000962.3:3481326-3482760", "159": "NC_000962.3:3483947-3485111", "160": "NC_000962.3:3527950-3529180", "161": "NC_000962.3:3551214-3552587", "162": "NC_000962.3:3552706-3554070", "163": "NC_000962.3:3594264-3594343", "164": "NC_000962.3:3594376-3594455", "165": "NC_000962.3:3710381-3712822", "166": "NC_000962.3:3730352-3731064", "167": "NC_000962.3:3732080-3732792", "168": "NC_000962.3:3735637-3736314", "169": "NC_000962.3:3738004-3738776", "170": "NC_000962.3:3743245-3743501", "171": "NC_000962.3:3743711-3753178", "172": "NC_000962.3:3753332-3754361", "173": "NC_000962.3:3755952-3767119", "174": "NC_000962.3:3769561-3769853", "175": "NC_000962.3:3795043-3796426", "176": "NC_000962.3:3802145-3802720", "177": "NC_000962.3:3841534-3842904", "178": "NC_000962.3:3842948-3843702", "179": "NC_000962.3:3846462-3847892", "180": "NC_000962.3:3883537-3884921", "181": "NC_000962.3:3890773-3892140", "182": "NC_000962.3:3894018-3895588", "183": "NC_000962.3:3930990-3936438", "184": "NC_000962.3:3941409-3945597", "185": "NC_000962.3:3945779-3951329", "186": "NC_000962.3:4052972-4053216", "187": "NC_000962.3:4053305-4053549", "188": "NC_000962.3:4053633-4054094", "189": "NC_000962.3:4059985-4060591", "190": "NC_000962.3:4069250-4070458", "191": "NC_000962.3:4077794-4078201", "192": "NC_000962.3:4134602-4134729", "193": "NC_000962.3:4221090-4222560", "194": "NC_000962.3:4252855-4254367", "195": "NC_000962.3:4293410-4299541", "196": "NC_000962.3:4301543-4303432", "197": "NC_000962.3:4318342-4319371", "198": "NC_000962.3:4320046-4320106", "199": "NC_000962.3:4383096-4383754"}
+    let sortOption = "BASE"
+    let igvBrowser
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initIGV()
+    })
+
+
+    function initIGV() {
+
+        var igvDiv
+
+        igvDiv = document.getElementById("igvDiv")
+        var options = {"reference": {"fastaURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv/GCF_000195955.2_ASM19595v2_genomic.fasta", "indexURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv/GCF_000195955.2_ASM19595v2_genomic.fasta.fai"}, "tracks": [{"name": "H37Rv Gene Annotation", "type": "annotation", "format": "gff3", "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv/GCF_000195955.2_ASM19595v2_genomic.GenesOnly.gff", "height": 100, "autoHeight": "True", "displayMode": "EXPANDED", "visibilityWindow": 30000}, {"name": "H37Rv Homology Map Alignments", "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv_HomologyMap/H37Rv.HomologyMap.k19w19.SelfToSelfAln.bam", "indexURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv_HomologyMap/H37Rv.HomologyMap.k19w19.SelfToSelfAln.bam.bai", "height": 100, "showCoverage": "False", "autoHeight": "True", "format": "bam", "type": "alignment"}, {"name": "mada_120 Assembly Alignment", "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/mada_120/mada_120.mm2.AsmToH37Rv.asm10.cram", "indexURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/mada_120/mada_120.mm2.AsmToH37Rv.asm10.cram.crai", "height": 50, "showCoverage": "False", "autoHeight": "True", "format": "cram", "type": "alignment"}, {"name": "mada_120 LR Alignments (100X-capped)", "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/mada_120/mada_120.LR.AlnToH37Rv.Subsample100x.cram", "indexURL": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/samples/Mtb151/mada_120/mada_120.LR.AlnToH37Rv.Subsample100x.cram.crai", "height": 300, "showCoverage": "True", "autoHeight": "True", "samplingDepth": 1000, "format": "cram", "type": "alignment"}], "roi": [{"name": "H37Rv.ParalogousRegions", "url": "/n/data1/hms/dbmi/farhat/mm774/Projects/Mtb-GeneConv/NucFlag_Snakemake_TestOutputs_Mtb151/_shared/H37Rv.ParalogousRegions.bed", "type": "roi", "format": "bed"}]}
+
+        igv.createBrowser(igvDiv, options)
+            .then(function (b) {
+                if (sortOption === "BASE") sortOption = "NONE"
+                initTable(b)
+                searchAndSort(b, locusDictionary["0"])
+            })
+    }
+
+    function initTable(igvBrowser) {
+
+        const table = document.createElement("table")
+        table.id = "variant_table"
+        table.style.width = "100%"
+
+        document.getElementById("tableSelectorDiv").appendChild(table)
+
+        const thead = document.createElement('thead')
+        table.appendChild(thead)
+        const headerRow = thead.insertRow(0)
+
+        const headers = tableJson.headers
+        for (let j = 1; j < headers.length; j++) {
+            var cell = document.createElement("th")
+            headerRow.appendChild(cell)
+            cell.innerHTML = headers[j]
+        }
+
+        const tbody = document.createElement('tbody')
+        table.appendChild(tbody)
+        const tableRows = tableJson.rows
+        for (let i = 0; i < tableRows.length; i++) {
+
+            const json = tableRows[i]
+            const unique_id = json[0]
+            const row = document.createElement("tr")
+            row.id = "row_" + unique_id
+            tbody.appendChild(row)
+
+            // First row selected by default
+            if (i === 0) row.classList.add("selected")
+
+            row.onclick = function (event) {
+                const list = document.getElementById("variant_table").getElementsByTagName("tr")
+                for (let i = 0; i < list.length; i++) {
+                    list[i].classList.remove("selected")
+                }
+                const rowID = event.target.parentElement.id
+                const row = document.getElementById(rowID)
+                row.classList.add("selected")
+                const uniqueId = rowID.substring(4)
+                const locus = locusDictionary[uniqueId]
+                searchAndSort(igvBrowser, locus)
+            }
+
+            for (let j = 1; j < headers.length; j++) {
+
+                var value = json[j]
+                cell = document.createElement("td")
+                cell.rowID = i
+                row.appendChild(cell)
+                cell.innerHTML = value
+            }
+        }
+
+        // Add sorting.  Adapted from https://stackoverflow.com/questions/14267781/sorting-html-table-with-javascript/49041392
+        Array.prototype.slice.call(document.querySelectorAll('th')).forEach(function (th) {
+            th.addEventListener('click', function () {
+                //var table = th.parentNode
+                //while (table.tagName.toUpperCase() != 'TABLE') table = table.parentNode;
+                Array.prototype.slice.call(table.querySelectorAll('tr:nth-child(n+1)'), 1)
+                    .sort(comparer(Array.prototype.slice.call(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+                    .forEach(function (tr) {
+                        table.appendChild(tr)
+                    })
+            })
+        })
+
+
+        function getCellValue(tr, idx) {
+            return tr.children[idx].innerText || tr.children[idx].textContent
+        }
+
+        function comparer(idx, asc) {
+            return function (a, b) {
+                return function (v1, v2, asc) {
+                    // Special case for chromosome coloumn
+                    if (idx === 0 && v1.startsWith('chr') && v2.startsWith('chr')) {
+                        v1 = v1.substr(3)
+                        v2 = v2.substr(3)
+                    }
+                    // always put empty columns at end of table when sorting
+                    if (v1 == '' && v2 != '') {
+                        return 1
+                    }
+                    if (v2 == '' && v1 != '') {
+                        return -1
+                    }
+
+                    var isNumber = v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2)
+                    ret = isNumber ? v1 - v2 : v1.toString().localeCompare(v2)
+
+                    // reverse ordering if not ascending order
+                    if (!asc) {
+                        ret = -1 * ret
+                    }
+                    return (ret)
+
+                }(getCellValue(a, idx), getCellValue(b, idx), asc)
+            }
+        }
+
+    }
+
+
+    function searchAndSort(igvBrowser, locus) {
+        igvBrowser.search(locus)
+            .then(function (ignore) {
+                const locusObject = parseLocus(locus)
+                const isSNV = locusObject && locusObject.start === locusObject.end
+                if (sortOption !== "NONE" || isSNV) {
+                    const option = sortOption === "NONE" ? "BASE" : sortOption
+                    const position = Math.floor((locusObject.start + locusObject.end) / 2)
+                    const sortObject = {
+                        chr: locusObject.chr,
+                        position: position,
+                        option: option,
+                        direction: true
+                    }
+                    const alignmentTracks = igvBrowser.findTracks("type", "alignment")
+                    for (let t of alignmentTracks) {
+                        t.sort(sortObject)
+                    }
+                }
+
+            })
+
+    }
+
+    function parseLocus(locus) {
+        const a = locus.split(":")
+        if (a.length === 2) {
+            const b = a[1].split("-")
+            if (b.length === 2) {
+                return {
+                    chr: a[0],
+                    start: Number.parseInt(b[0]) - 1,
+                    end: Number.parseInt(b[1])
+                }
+            }
+        }
+        return undefined
+    }
+
+</script>
+</body>
+</html>

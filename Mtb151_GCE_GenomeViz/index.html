@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mtb Gene Conversion Analysis - Results Explorer</title>
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- gosling.js and its peer deps (react, pixi.js, higlass) are resolved/bundled
+       as ES modules by esm.sh at import time in app.js -- no separate <script> tags needed. -->
+  <link rel="stylesheet" href="https://esm.sh/higlass/dist/hglib.css">
+</head>
+<body>
+  <p class="breadcrumb"><a href="../index.html">&larr; MtbGC-DataViz-V1</a></p>
+  <header class="topbar">
+    <h1>Mtb Gene Conversion Analysis - Results Explorer</h1>
+    <div class="meta" id="statusText">Loading...</div>
+  </header>
+
+  <section class="intro">
+    <p>
+      This page contains an interactive visualization of the core results from our paper,
+      &ldquo;Gene conversion is a key driver of diversity hotspots in <em>Mycobacterium tuberculosis</em>
+      antigens and virulence-associated loci.&rdquo;
+    </p>
+    <p class="intro-badges">
+      <a href="https://doi.org/10.64898/2026.02.26.708061">
+        <img src="https://img.shields.io/badge/bioRxiv-10.64898%2F2026.02.26.708061-b31b1b" alt="DOI: 10.64898/2026.02.26.708061" />
+      </a>
+    </p>
+    <p class="intro-badges">
+      <a class="repo-link" href="https://github.com/maxgmarin/mtb-geneconv-manuscript" target="_blank" rel="noopener">Manuscript GitHub repo</a>
+    </p>
+    <p>
+      The table above lists all individual gene conversion events detected across the evolutionary
+      history of a dataset of 151 <em>M. tuberculosis</em> genomes.
+    </p>
+    <p>
+      Below it is an integrated genome browser (built with
+      <a href="https://gosling-lang.org/" target="_blank" rel="noopener">Gosling</a>) showing the
+      distribution of all detected putative gene conversion events (N&nbsp;=&nbsp;324) across the
+      entire Mtb genome.
+    </p>
+    <p>
+      Selecting an event in the table above will move the genome browser to that region.
+      Conversely, clicking an event block in the genome browser will select and highlight its row
+      in the table.
+    </p>
+  </section>
+
+  <main class="layout">
+    <section class="panel panel-events">
+      <div class="panel-header">
+        <h2>Gene Conversion Event Table (N = 324)</h2>
+        <input id="searchInput" type="search" placeholder="Search EventID, node, lineage, gene..." />
+      </div>
+      <div class="table-wrap">
+        <table id="eventsTable">
+          <thead>
+            <tr>
+              <th>EventID</th>
+              <th>seqname</th>
+              <th>start_1based</th>
+              <th>end_1based</th>
+              <th>EventLen</th>
+              <th>Lineage</th>
+              <th>Overlap_Genes</th>
+              <th>Child_Node</th>
+              <th>Parent_Node</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="summary" id="eventsSummary"></div>
+    </section>
+
+    <section class="gosling-row">
+      <div class="panel panel-gosling">
+        <div class="panel-header">
+          <h2>Integrated view of nucleotide diversity, gene conversion, and homology between paralogous regions (Built with <a href="https://gosling-lang.org/" target="_blank" rel="noopener">Gosling.js</a>)</h2>
+          <button id="homeBtn" type="button">Reset view</button>
+        </div>
+        <div class="table-wrap">
+          <div id="goslingContainer"></div>
+        </div>
+      </div>
+
+      <aside class="panel panel-info">
+        <div class="panel-header">
+          <h2>Selected Event</h2>
+        </div>
+        <div class="info-wrap" id="eventInfo">
+          <p class="info-empty">Select an event row above to see its details here.</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
