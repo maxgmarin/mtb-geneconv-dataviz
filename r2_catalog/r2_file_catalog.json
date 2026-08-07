@@ -14,6 +14,16 @@
       "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv/GCF_000195955.2_ASM19595v2_genomic.fasta",
       "size_bytes": 4466740,
       "last_modified": "2026-07-20T13:39:34Z"
+    },
+    "reference_homology_map_bam_bai": {
+      "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv_HomologyMap/H37Rv.HomologyMap.k19w19.SelfToSelfAln.bam.bai",
+      "size_bytes": 4360,
+      "last_modified": "2026-07-29T16:45:07Z"
+    },
+    "reference_homology_map_bam": {
+      "url": "https://pub-4ffd5d52d77a41f7b1f7021fbd09c3d2.r2.dev/reference/H37Rv_HomologyMap/H37Rv.HomologyMap.k19w19.SelfToSelfAln.bam",
+      "size_bytes": 328070,
+      "last_modified": "2026-07-29T16:45:05Z"
     }
   },
   "samples": {
