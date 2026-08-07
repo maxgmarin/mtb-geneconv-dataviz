@@ -5,7 +5,7 @@ of the data and results from the paper *Gene conversion is a key driver of diver
 hotspots in M. tuberculosis antigens and virulence-associated loci*
 ([bioRxiv](https://www.biorxiv.org/content/10.64898/2026.02.26.708061v2)).
 
-**Live site**: (not yet published -- see "Publishing to GitHub Pages" below)
+**Live site**: [https://maxgmarin.github.io/mtb-geneconv-dataviz/](https://maxgmarin.github.io/mtb-geneconv-dataviz/)
 
 ## What's here
 
