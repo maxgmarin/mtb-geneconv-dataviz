@@ -71,9 +71,10 @@ A table + iframe viewer for 12 candidate gene-conversion events identified in th
 TBP22/22CI cohort, built to support targeted resequencing verification. For each event,
 one isolate ("Verification"/target) is expected to carry the recombinant variant and a
 paired isolate ("Control") is expected not to. Each event's report shows the H37Rv region
-(+/-10kb flanking) with 7 tracks: a shared H37Rv gene-annotation track, then the target
-isolate's Assembly-to-H37Rv, long-read-WGS-to-H37Rv, and short-read-WGS-to-H37Rv
-alignments, then the control isolate's same 3 alignment types -- so target vs. control can
+(+/-10kb flanking) with 8 tracks: a shared H37Rv gene-annotation track, a shared H37Rv
+self-to-self homology map track, then the target isolate's Assembly-to-H37Rv,
+long-read-WGS-to-H37Rv, and short-read-WGS-to-H37Rv alignments, then the control
+isolate's same 3 alignment types -- so target vs. control can
 be compared directly at each event. Every report is a fully self-contained, embedded
 (`--standalone`) igv-reports HTML -- no dependency on the Cloudflare R2 bucket used by the
 NucDivHotspots/MtbParalogRegions viewers above. This sub-page has no separate source
